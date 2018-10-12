@@ -9,7 +9,7 @@
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
 /* returns packet id */
-static uint32_t print_pkt (struct nfq_data *tb)
+static uint32_t print_pkt2(struct nfq_data *tb)
 {
 	int id = 0;
 	struct nfqnl_msg_packet_hdr *ph;
@@ -74,15 +74,15 @@ static uint32_t print_pkt (struct nfq_data *tb)
 }
 	
 
-static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
-	      struct nfq_data *nfa, void *data)
+static int cb2(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
+               struct nfq_data *nfa, void *data)
 {
-	uint32_t id = print_pkt(nfa);
+	uint32_t id = print_pkt2(nfa);
 	printf("entering callback\n");
 	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
-int main(int argc, char **argv)
+int main2(int argc, char **argv)
 {
 	struct nfq_handle *h;
 	struct nfq_q_handle *qh;
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 	}
 
 	printf("binding this socket to queue '%d'\n", queue);
-	qh = nfq_create_queue(h, queue, &cb, NULL);
+	qh = nfq_create_queue(h, queue, &cb2, NULL);
 	if (!qh) {
 		fprintf(stderr, "error during nfq_create_queue()\n");
 		exit(1);

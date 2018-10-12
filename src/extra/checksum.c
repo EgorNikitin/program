@@ -18,7 +18,7 @@
 
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
-#include "../internal.h"
+#include "internal.h"
 
 uint16_t nfq_checksum(uint32_t sum, uint16_t *buf, int size)
 {

@@ -1,6 +1,9 @@
 #ifndef _PKTBUFF_H_
 #define _PKTBUFF_H_
 
+#include <stdint.h>
+#include <stddef.h>
+
 struct pkt_buff;
 
 struct pkt_buff *pktb_alloc(int family, void *data, size_t len, size_t extra);

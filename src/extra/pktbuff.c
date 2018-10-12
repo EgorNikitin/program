@@ -17,7 +17,7 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 
-#include "../internal.h"
+#include "internal.h"
 
 /**
  * \defgroup pktbuff User-space network packet buffer
@@ -41,7 +41,7 @@
  * \return a pointer to a new queue handle or NULL on failure.
  */
 struct pkt_buff *
-pktb_alloc(int family, void *data, size_t len, size_t extra)
+pktb_alloc(int family, void *data, uint32_t len, uint32_t extra)
 {
 	struct pkt_buff *pktb;
 	void *pkt_data;
@@ -62,25 +62,28 @@ pktb_alloc(int family, void *data, size_t len, size_t extra)
 	pktb->tail = pktb->head + len;
 
 	switch(family) {
-	case AF_INET:
-		pktb->network_header = pktb->data;
-		break;
-	case AF_BRIDGE: {
-		struct ethhdr *ethhdr = (struct ethhdr *)pktb->data;
+        case AF_INET:
+            pktb->network_header = pktb->data;
+            break;
+        case AF_BRIDGE: {
+            struct ethhdr *ethhdr = (struct ethhdr *)pktb->data;
 
-		pktb->mac_header = pktb->data;
+            pktb->mac_header = pktb->data;
 
-		switch(ethhdr->h_proto) {
-		case ETH_P_IP:
-			pktb->network_header = pktb->data + ETH_HLEN;
-			break;
-		default:
-			/* This protocol is unsupported. */
-			free(pktb);
-			return NULL;
-		}
-		break;
-	}
+            switch(ethhdr->h_proto) {
+                case ETH_P_IP:
+                    pktb->network_header = pktb->data + ETH_HLEN;
+                    break;
+                default:
+                    /* This protocol is unsupported. */
+                    free(pktb);
+                    return NULL;
+            }
+            break;
+        }
+        default:
+            free(pktb);
+            return NULL;
 	}
 	return pktb;
 }

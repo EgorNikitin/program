@@ -19,7 +19,7 @@
 #include <libnetfilter_queue/libnetfilter_queue_ipv6.h>
 #include <libnetfilter_queue/pktbuff.h>
 
-#include "../internal.h"
+#include "internal.h"
 
 /**
  * \defgroup ipv6 IPv6 helper functions

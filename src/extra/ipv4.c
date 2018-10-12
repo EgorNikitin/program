@@ -18,8 +18,7 @@
 #include <libnetfilter_queue/libnetfilter_queue_ipv4.h>
 #include <libnetfilter_queue/pktbuff.h>
 
-#include "../internal.h"
-
+#include "internal.h"
 /**
  * \defgroup ipv4 IPv4 helper functions
  * @{
