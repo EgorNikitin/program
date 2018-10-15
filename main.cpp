@@ -22,8 +22,12 @@ extern "C" {
 #include "./src/utils/utils.cpp"
 #include "./src/rules/rules.cpp"
 
+#include <algorithm>
+
 using namespace std;
 
+std::string payloadStringN;
+uint32_t numberPayloadString = 6;
 
 static data_dto handle_pkt(struct nfq_data *tb) {
 
@@ -50,9 +54,9 @@ static data_dto handle_pkt(struct nfq_data *tb) {
         pair<uint8_t *, uint32_t > *p = get_tcp_payload(data,ret);
         if (p != nullptr) {
             string sdata ( (char*) p->first,p->second);
-            regex myRegexp("GET");
+            regex myRegexp(payloadStringN);
             if(regex_search(sdata,myRegexp)) {
-                cout << endl << "FIND! id= " << id << " str= " << "GET" << endl;
+                cout << endl << "FIND! id= " << id << " str= " << payloadStringN << endl;
             }
         }
 
@@ -71,11 +75,39 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
     return nfq_set_verdict(qh, t.id, NF_ACCEPT, 0, NULL);
 }
 
+std::string getPayloadStringN(uint32_t N) {
+
+    vector<Rule> rules;
+    vector<string> v = readFileRules();
+    for (auto &x: v) {
+        vector<string> temp = split(x,',');
+        Rule rule(
+                split(temp[0],':')[1],
+                split(temp[1],':')[1],
+                split(temp[2],':')[1],
+                split(temp[3],':')[1],
+                split(temp[4],':')[1]
+        );
+        rules.push_back(rule);
+    }
+
+    if (N >= v.size() || N < 0)
+        N = 0;
+
+    return rules[N-1].payload;
+}
+
 int main(int argc, char **argv) {
 
     uint32_t queue = 0;
     struct nfq_handle *h;
     struct nfq_q_handle *qh;
+    payloadStringN = preparePayloadString(getPayloadStringN(numberPayloadString));
+    printf("payloadStringN = |");
+    for (auto x : payloadStringN) {
+            printf("%02x|",x);
+    }
+    std::cout << std::endl;
 
     if (argc == 2) {
         queue = atoi(argv[1]);
