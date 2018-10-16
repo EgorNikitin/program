@@ -26,7 +26,23 @@ extern "C" {
 #include <libnetfilter_queue/pktbuff.h>
 }
 
+#include "../extra/checksum.c"
+
 using namespace std;
+
+
+uint16_t tcp_compute_checksum_ipv4(uint8_t *ipPkt)
+{
+    struct iphdr *iph;
+    struct tcphdr *tcph;
+
+    iph = (struct iphdr *)ipPkt;
+    tcph = (struct tcphdr *)(ipPkt + iph->ihl*4);
+
+    /* checksum field in header needs to be zero for calculation. */
+    tcph->check = 0;
+    return nfq_checksum_tcpudp_ipv4(iph);
+}
 
 void print_ip_payload(unsigned char *data, int ret, uint16_t hw_protocol) {
 
@@ -124,32 +140,4 @@ pair<uint8_t*,uint32_t > *get_tcp_payload(uint8_t *ip_pkt, uint32_t ip_len) {
     tcp_payload_len = nfq_tcp_get_payload_len(tcph,pktBuff);
 
     return new pair<uint8_t*,uint32_t > (tcp_payload,tcp_payload_len);
-}
-
-int test_regex_search() {
-
-    unsigned char data[] = { 0x45, 0x00, 0x00, 0x4b, 0x2f, 0xa5, 0x40, 0x00, 0x40, 0x06, 0xe8, 0xc5, 0x6f, 0xde, 0x21, 0x85,
-                             0x6f, 0xde, 0x21, 0x01, 0xd0, 0xfe, 0x0b, 0xb8, 0xde, 0xa4, 0xde, 0x0f, 0xc2, 0x76, 0x63, 0xdb,
-                             0x50, 0x18, 0x72, 0x10, 0x5a, 0xe5, 0x00, 0x00, 0x47, 0x45, 0x54, 0x20, 0x2f, 0x20, 0x48, 0x54,
-                             0x54, 0x50, 0x2f, 0x31, 0x2e, 0x30, 0x0a, 0x48, 0x6f, 0x73, 0x74, 0x3a, 0x20, 0x31, 0x31, 0x31,
-                             0x2e, 0x32, 0x32, 0x32, 0x2e, 0x33, 0x33, 0x2e, 0x31, 0x0a, 0x0a };
-    unsigned int data_len = sizeof(data)/ sizeof(*data);
-
-    pair<uint8_t *, uint32_t > *p = get_tcp_payload(data, data_len);
-
-    if (p == nullptr) {
-        cout << "Oops!" << endl;
-        return 0;
-    }
-
-    string sdata ( (char*) p->first, p->second);
-    regex e ("111\\.2");
-
-    if (regex_search (sdata,e)) {
-        cout << "Yes" << endl;
-    } else {
-        cout << "No" << endl;
-    }
-
-    return 0;
 }

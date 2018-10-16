@@ -27,7 +27,7 @@ extern "C" {
 using namespace std;
 
 std::string payloadStringN;
-uint32_t numberPayloadString = 6;
+uint32_t numberPayloadString = 1;
 
 static data_dto handle_pkt(struct nfq_data *tb) {
 
@@ -46,11 +46,18 @@ static data_dto handle_pkt(struct nfq_data *tb) {
     ret = nfq_get_payload(tb, &data);
     if (ret >= 0) {
         printf("\t//\tlen = %d\t//\tip_payload_len = %d\n", ret+14, ret);
-        /*if (id == 1) {
-            printf("MSS = %02x %02x\n",data[0x38-14],data[0x39-14]);
-            data[0x38-14] = 0x1;
+        if (id == 1) {
+            printf("MSS = %02x %02x\t",data[0x38-14],data[0x39-14]);
+            printf("SUM = %02x %02x\n", data[0x32 - 14], data[0x33 - 14]);
+            // 0x218 < MSS < 0x5B4
+            data[0x38-14] = 0x3;
             data[0x39-14] = 0x0;
-        }*/
+            uint16_t _checksum = tcp_compute_checksum_ipv4(data);
+            data[0x32-14] = 0xFF & _checksum;
+            data[0x33 - 14] = 0xFF & (_checksum >> 8);
+            printf("MSS_2 = %02x %02x\t",data[0x38-14],data[0x39-14]);
+            printf("SUM_2 = %02x %02x\n", data[0x32 - 14], data[0x33 - 14]);
+        }
         pair<uint8_t *, uint32_t > *p = get_tcp_payload(data,ret);
         if (p != nullptr) {
             string sdata ( (char*) p->first,p->second);
@@ -71,8 +78,8 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 
     data_dto t = handle_pkt(nfa);
 //    printf("entering callback\n");
-//    return nfq_set_verdict(qh, t.id, NF_ACCEPT, t.data_len, t.data);
-    return nfq_set_verdict(qh, t.id, NF_ACCEPT, 0, NULL);
+    return nfq_set_verdict(qh, t.id, NF_ACCEPT, t.data_len, t.data);
+//    return nfq_set_verdict(qh, t.id, NF_ACCEPT, 0, NULL);
 }
 
 std::string getPayloadStringN(uint32_t N) {
